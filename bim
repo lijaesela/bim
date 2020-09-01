@@ -427,10 +427,22 @@ here are some variables you must be aware of.
 \$base        # the first line visible in the window
 \$file        # file that 'bim_write' writes to if not given an argument
 
+# silly, basic examples
+# for some real, useful functions, see the example bimrc.
+goto_seven() {
+    # set active line to 7
+    line=7
+}
+set_poggers() {
+    # exit if line is 0 (no line)
+    [ \$line = 0 ] && return 1
+    # set the current line's contents
+    buffer[line]="poggers!"
+}
 EOF
 }
 
-main () {
+main() {
     case $1 in
         -h|--help) trap : EXIT; usage;;
         -k|--keys) trap : EXIT; keys;;
