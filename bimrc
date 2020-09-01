@@ -1,7 +1,50 @@
 #!/usr/bin/env bash
 
+# create a shell function with the given name
+bim_func() {
+	# name defaults to func if not given
+	[ "$1" ] && name="$1"|| name="func"
+	# create 3 lines
+	bim_blank; bim_blank; bim_blank
+	# create function skeleton
+	buffer[line-2]="${name}() {"
+	buffer[line-1]="    "
+	buffer[line]="}"
+	# edit contents
+	bim_up 1; bim_edit
+}
+
+# swap the current line with the next
 bim_swap() {
 	swapbuf="${buffer[line+1]}"
 	buffer[line+1]="${buffer[line]}"
 	buffer[line]="$swapbuf"
+}
+
+# these keybinds are identical to defaults.
+# they are included for didactic purposes.
+keybinds() {
+    case "${key}" in
+    
+        # motions
+        k) bim_up 1;;
+        j) bim_down 1;;
+        K) bim_up $((LINES - 4));;
+        J) bim_down $((LINES - 4));;
+        
+        # editing
+        i) bim_edit;;
+        d) bim_delete;;
+        c) bim_clear;;
+        o) bim_insert;;
+        O) bim_backinsert;;
+        n) bim_blank;;
+        N) bim_backblank;;
+        y) bim_yank;;
+        p) bim_paste;;
+    
+        # misc
+        :) bim_prompt;;
+    
+    esac
 }
