@@ -87,7 +87,7 @@ keybinds() {
 		  ### rc functions ###
 		  I) indent 4;;
 		  U) undent 4;;
-		  F) cursor show; bim_shellfunc "$(arg_prompt)";;
+		  F) cursor show; bim_shellfunc "$(misc_prompt "shell function: ")";;
 		  S) bim_swap;;
     
     esac

@@ -273,10 +273,11 @@ bim_prompt() {
     cursor hide
 }
 
-arg_prompt() {
+misc_prompt() {
+    [ "$1" ] || return 1
     bind 'set disable-completion off' 2>/dev/null
     cursor show
-    read -rep ":"
+    read -rep "$1"
     bind 'set disable-completion on' 2>/dev/null
 
     printf '%s' "$REPLY"
