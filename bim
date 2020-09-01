@@ -82,6 +82,7 @@ startup() {
     cursor hide
     cursor spos
     cursor save
+    cursor nowrap
 }
 
 cleanup() {
@@ -100,6 +101,7 @@ cursor() {
     hide) printf "\e[?25l";;
     show) printf "\e[?25h";;
     goto) printf "\e[%s;%sf" "$2" "$3";;
+    nowrap) printf "\e[?7l";;
     esac
     return 1
 }
@@ -121,15 +123,21 @@ refresh() {
 }
 
 bim_read() {
-    bim_set "$1" || return 1
-    mapfile -t -O 1 buffer <"$file"
-    line=1
-    message="Read ${#buffer[@]} lines from '$file'"
-}
+    if [ "$1" ]; then
+        file="$1"
+    else
+        message="expected argument [FILE]"
+        return 1
+    fi
 
-bim_set() {
-    [ "$1" ] && file="$1" || return 1
-    message="Set file path to '$file'"
+    if [ -e "$file" ];then
+        mapfile -t -O 1 buffer <"$file"
+        message="Read ${#buffer[@]} lines from '$file'"
+    else
+        message="new file '$file'"
+    fi
+
+    [ ${#buffer[@]} -ne 0 ] && line=1
 }
 
 bim_write() {
@@ -289,7 +297,7 @@ e() {
 
 keyboard_loop () {
     startup
-    bim_read "$1" && message="welcome to bim ($message)"
+    [ "$1" ] && bim_read "$1"
     refresh
 
     while true; do
