@@ -5,7 +5,10 @@
 ### urgent
 
 # make screen pan if needed for ALL actions that move the cursor
-# maybe? idk
+
+### maybe?
+
+# truly iron out multiline inserts
 
 ### pog
 
@@ -132,7 +135,7 @@ bim_set() {
 bim_write() {
     [ "$1" ] && myfile="$1" || myfile="$file"
     : >"$myfile"
-    for wline in "${buffer[@]}"; do echo "$wline" >>"$myfile"; done
+    for wline in "${buffer[@]}"; do echo "$wline" >> "$myfile"; done
     message="Wrote ${#buffer[@]} lines to '$myfile'"   
     unsaved_changes=0
 }
@@ -163,6 +166,8 @@ bim_insert() {
     buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
     unset "buffer[0]"
     ((line++))
+    # I have no clue why this has to be "-4" here
+    ((line > base+LINES-4))  && ((base++))
     refresh
     bim_edit
 }
@@ -177,21 +182,27 @@ bim_backinsert() {
 bim_blank() {
     buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
     unset "buffer[0]"
+    ((line++))
+    ((line > base+LINES-3))  && ((base++))
 }
 
 bim_backblank() {
     buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
     unset "buffer[0]"
+    ((line++))
+    ((line > base+LINES-3))  && ((base++))
 }
 
 bim_yank() {
     lineyank="${buffer[line]}"
+    message="line yanked."
 }
 
 bim_paste() {
     buffer=([0]="" "${buffer[@]:1:line}" "$lineyank" "${buffer[@]:line+1}")
     unset "buffer[0]"
     ((line++))
+    ((line > base+LINES-3))  && ((base++))
 }
 
 bim_clear() {
@@ -199,12 +210,6 @@ bim_clear() {
     cursor goto $((line-base + 2)) 6
     buffer[line]=""
     unsaved_changes=1
-}
-
-bim_clear() {
-    ((line == 0)) && return
-    cursor goto $((line-base + 2)) 6
-    buffer[line]=""
 }
 
 bim_edit() {
@@ -350,7 +355,7 @@ just run them. no "!" required :)
 all inputs can also be typed as commands.
 this allows for scripting.
 run bim in the repository and type:
-:source ./example.bash
+:source example.bash
 and see what happens!
 EOF
 }
@@ -359,6 +364,15 @@ main () {
     case $1 in
         -h|--help) trap : EXIT; usage;;
         -k|--keys) trap : EXIT; keys;;
+        -c|--rc)
+            trap : EXIT
+            bimrc
+            if [ "$message" = "welcome to bim" ]; then
+                echo "no rc found."
+            else
+                echo "$message"
+            fi
+            ;;
         *) bimrc; keyboard_loop "$1";;
     esac
 }
