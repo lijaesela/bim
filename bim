@@ -309,11 +309,12 @@ usage () {
 cat <<EOF
 bim: bash vim
 
-usage: ${0##*/} [options] [file]
+usage: ${0##*/} [ options | file ]
 
 options:
     -h|--help: print this help message
-    -k|--keys: print a list of defaults
+    -k|--keys: print a list of defaults, and more info
+    -c|--rc: test for rc file
 
 if no file is given, default is bim.txt
 EOF
