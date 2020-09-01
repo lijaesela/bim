@@ -31,9 +31,18 @@ undent() {
 	done
 }
 
-# change the $1h (strong) word of a line to $2
+# change the last (strong) word on a line
 bim_cw() {
-	sldkf
+	[ "$1" ] || return 1
+	[ ${#buffer[@]} = 0 ] && return 1
+	buffer[line]="${buffer[line]%%${buffer[line]##* }}${1}"
+}
+
+# delete the last (strong) word on a line
+bim_dw() {
+	[ ${#buffer[@]} = 0 ] && return 1
+	buffer[line]="${buffer[line]%%${buffer[line]##* }}"
+	buffer[line]="${buffer[line]%%?}"
 }
 
 # create a shell function with a name
@@ -45,7 +54,7 @@ bim_shellfunc() {
 	# create 3 lines
 	bim_blank; bim_blank; bim_blank
 	# create function skeleton
-	buffer[line-2]="${name}() {"
+	buffer[line-2]="${name} () {"
 	i=0
 	while [ $i -ne "$indent" ]; do
 		buffer[line-1]="${buffer[line-1]} "
@@ -94,8 +103,16 @@ keybinds() {
 		  ### rc functions ###
 		  I) indent 4;;
 		  U) undent 4;;
-		  F) cursor show; bim_shellfunc "$(misc_prompt "shell function: ")";;
 		  S) bim_swap;;
+		  F) cursor show
+			  bim_shellfunc "$(misc_prompt "shell function: ")"
+		     cursor hide
+			  ;;
+		  w) cursor show
+			  bim_cw $(misc_prompt "h: ")
+		     cursor hide
+			  ;;
+		  D) bim_dw;;
     
     esac
 }

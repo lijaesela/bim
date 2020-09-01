@@ -263,6 +263,7 @@ bim_prompt() {
     bind 'set disable-completion off' 2>/dev/null
     cursor show
     read -rep ":" choice
+    cursor hide
     bind 'set disable-completion on' 2>/dev/null
 
     if [ "${choice::1}" = "!" ]; then
@@ -272,18 +273,17 @@ bim_prompt() {
     else
         eval "$choice"
     fi
-    cursor hide
 }
 
 misc_prompt() {
+    # cursor must be shown externally
+    # as to not pass escape sequences into functions
     [ "$1" ] || return 1
     bind 'set disable-completion off' 2>/dev/null
-    cursor show
     read -rep "$1"
     bind 'set disable-completion on' 2>/dev/null
 
     printf '%s' "$REPLY"
-    cursor hide
 }
 
 quit() {
