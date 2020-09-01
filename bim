@@ -62,6 +62,8 @@ bimrc() {
                 j) bim_down 1;;
                 K) bim_up $((LINES - 4));;
                 J) bim_down $((LINES - 4));;
+                g) bim_bof;;
+                G) bim_eof;;
                 
                 # editing
                 i) bim_edit;;
@@ -290,6 +292,15 @@ quit() {
     else
         message="unsaved changes. force quit with \":qq\""
     fi
+}
+
+bim_bof() {
+	[ ${#buffer[@]} = 0 ] && return 1
+    line=1
+}
+
+bim_eof() {
+    line=${#buffer[@]}
 }
 
 # functions that are really just aliases

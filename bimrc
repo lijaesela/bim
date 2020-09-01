@@ -31,6 +31,11 @@ undent() {
 	done
 }
 
+# change the $1h (strong) word of a line to $2
+bim_cw() {
+	sldkf
+}
+
 # create a shell function with a name
 # optionally, a number of indent spaces can be given
 bim_shellfunc() {
@@ -69,6 +74,8 @@ keybinds() {
         j) bim_down 1;;
         K) bim_up $((LINES - 4));;
         J) bim_down $((LINES - 4));;
+		  g) bim_bof;;
+		  G) bim_eof;;
         
         # editing
         i) bim_edit;;
