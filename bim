@@ -46,6 +46,9 @@ bimrc() {
     elif [ -f "$HOME/.bimrc" ]; then
         source "$HOME/.bimrc"
         message="rc loaded from \$HOME"
+    elif [ -f "./bimrc" ]; then
+        source "./bimrc"
+        message="rc loaded from current directory"
     fi
 
     # check if a keymap is provided
@@ -267,6 +270,16 @@ bim_prompt() {
     else
         eval "$choice"
     fi
+    cursor hide
+}
+
+arg_prompt() {
+    bind 'set disable-completion off' 2>/dev/null
+    cursor show
+    read -rep ":"
+    bind 'set disable-completion on' 2>/dev/null
+
+    printf '%s' "$REPLY"
     cursor hide
 }
 

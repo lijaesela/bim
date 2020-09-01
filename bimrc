@@ -33,7 +33,7 @@ undent() {
 
 # create a shell function with a name
 # optionally, a number of indent spaces can be given
-bim_func() {
+bim_shellfunc() {
 	# name defaults to func if not given
 	[ "$1" ] && name="$1" || name="func"
 	[ "$2" ] && indent="$2" || indent="4"
@@ -84,10 +84,10 @@ keybinds() {
         # misc
         :) bim_prompt;;
 
-		  # rc functions
-		  I) indent;;
-		  U) undent;;
-		  F) bim_func;;
+		  ### rc functions ###
+		  I) indent 4;;
+		  U) undent 4;;
+		  F) cursor show; bim_shellfunc "$(arg_prompt)";;
 		  S) bim_swap;;
     
     esac
