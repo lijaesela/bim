@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+bim_swap() {
+	swapbuf="${buffer[line+1]}"
+	buffer[line+1]="${buffer[line]}"
+	buffer[line]="$swapbuf"
+}

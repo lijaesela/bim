@@ -409,6 +409,23 @@ keybinds() {
 
 ### SCRIPTING ###
 
+functions in your rc can be simple lists of actions like so:
+
+# example
+add_three_lines() {
+    bim_blank
+    bim_blank
+    bim_blank
+}
+
+however, to actually get some value out of scripting,
+you probably want to manipulate the editor on a deeper level.
+here are some variables you must be aware of.
+
+\$line        # the selected line
+\${buffer[@]} # the array that stores the buffer
+\$base        # the first line visible in the window
+\$file        # file that 'bim_write' writes to if not given an argument
 
 EOF
 }
