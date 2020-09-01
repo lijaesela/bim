@@ -1,0 +1,366 @@
+#!/usr/bin/env bash
+
+# roadmap
+
+### urgent
+
+# make screen pan if needed for ALL actions that move the cursor
+# maybe? idk
+
+### pog
+
+declare -a buffer
+declare -i line base
+declare file version message
+bind 'set disable-completion on' 2>/dev/null
+
+line=0
+base=1
+file="bim.txt"
+version="indev"
+message="welcome to bim"
+unsaved_changes=0
+
+shopt -s checkwinsize; (:)
+trap refresh WINCH ALRM
+trap cleanup EXIT INT HUP USR1
+
+split() {
+   # Usage: split "string" "delimiter"
+   # thanks dylan araps :)
+   IFS=$'\n' read -d "" -ra arr <<< "${1//$2/$'\n'}"
+}
+
+bimrc() {
+    # check for rc in various locations
+    if [ "$BIMRC" ]; then
+        source "$BIMRC"
+        message="rc loaded from \$BIMRC"
+    elif [ -f "$XDG_CONFIG_HOME/bim/bimrc" ]; then
+        source "$XDG_CONFIG_HOME/bim/bimrc"
+        message="rc loaded from \$XDG_CONFIG_HOME"
+    elif [ -f "$HOME/.bimrc" ]; then
+        source "$HOME/.bimrc"
+        message="rc loaded from \$HOME"
+    fi
+
+    # check if a keymap is provided
+    # if not, set defaults
+    if [ ! "`type -t keybinds`" = "function" ]; then
+        keybinds() {
+            case "${key}" in
+            
+                # motions
+                k) bim_up 1;;
+                j) bim_down 1;;
+                K) bim_up $((LINES - 4));;
+                J) bim_down $((LINES - 4));;
+                
+                # editing
+                i) bim_edit;;
+                d) bim_delete;;
+                c) bim_clear;;
+                o) bim_insert;;
+                O) bim_backinsert;;
+                n) bim_blank;;
+                N) bim_backblank;;
+                y) bim_yank;;
+                p) bim_paste;;
+            
+                # misc
+                :) bim_prompt;;
+            
+            esac
+        }
+    fi
+}
+
+startup() {
+    cursor hide
+    cursor spos
+    cursor save
+}
+
+cleanup() {
+    cursor show
+    cursor rpos
+    cursor load
+    exit
+}
+
+cursor() {
+    case "$1" in
+    save) printf "\e[?47h";;
+    load) printf "\e[?47l";;
+    spos) printf "\e7";;
+    rpos) printf "\e8\e[B";;
+    hide) printf "\e[?25l";;
+    show) printf "\e[?25h";;
+    goto) printf "\e[%s;%sf" "$2" "$3";;
+    esac
+    return 1
+}
+
+refresh() {
+    clear
+    #printf "\e[36m %s (%s Lines) %s %sx%s %s \e[m\n" \
+        #"$file" "${#buffer[@]}" "$version" "$LINES" "$COLUMNS" "$base"
+    for ((i=base; i-base < LINES-2; i++)); do
+        ((i !=  line))        && printf "\e[93m"     || printf "\e[31m"
+        ((i > ${#buffer[@]})) && printf "   ~\e[m\n" || printf "%4s\e[m %s\n" "$i" "${buffer[i]}"
+    done
+    if [ "$message" ]; then
+        printf "\e[32m%s\e[m\n" "$message"
+    else
+        printf "\e[36m%s (%s Lines) %s (%sx%s) %s \e[m\n" \
+            "$file" "${#buffer[@]}" "$version" "$LINES" "$COLUMNS" "$base"
+    fi
+}
+
+bim_read() {
+    bim_set "$1" || return 1
+    mapfile -t -O 1 buffer <"$file"
+    line=1
+    message="Read ${#buffer[@]} lines from '$file'"
+}
+
+bim_set() {
+    [ "$1" ] && file="$1" || return 1
+    message="Set file path to '$file'"
+}
+
+bim_write() {
+    [ "$1" ] && myfile="$1" || myfile="$file"
+    : >"$myfile"
+    for wline in "${buffer[@]}"; do echo "$wline" >>"$myfile"; done
+    message="Wrote ${#buffer[@]} lines to '$myfile'"   
+    unsaved_changes=0
+}
+
+bim_up() {
+    for ((i=0;i<$1;i++)); do
+        ((line > 1))    && ((line--))
+        ((line < base)) && ((base--))
+        ((base <= 0))   && base=1
+    done
+}
+
+bim_down() {
+    for ((i=0;i<$1;i++)); do
+        ((line < ${#buffer[@]})) && ((line++))
+        ((line > base+LINES-3))  && ((base++))
+    done
+}
+
+bim_delete() {
+    buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
+    unset "buffer[0]"
+    ((line > ${#buffer[@]})) && ((line--))
+    unsaved_changes=1 #Set unsaved changes to 1
+}
+
+bim_insert() {
+    buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
+    unset "buffer[0]"
+    ((line++))
+    refresh
+    bim_edit
+}
+
+bim_backinsert() {
+    buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
+    unset "buffer[0]"
+    refresh
+    bim_edit
+}
+
+bim_blank() {
+    buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
+    unset "buffer[0]"
+}
+
+bim_backblank() {
+    buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
+    unset "buffer[0]"
+}
+
+bim_yank() {
+    lineyank="${buffer[line]}"
+}
+
+bim_paste() {
+    buffer=([0]="" "${buffer[@]:1:line}" "$lineyank" "${buffer[@]:line+1}")
+    unset "buffer[0]"
+    ((line++))
+}
+
+bim_clear() {
+    ((line == 0)) && return
+    cursor goto $((line-base + 2)) 6
+    buffer[line]=""
+    unsaved_changes=1
+}
+
+bim_clear() {
+    ((line == 0)) && return
+    cursor goto $((line-base + 2)) 6
+    buffer[line]=""
+}
+
+bim_edit() {
+    refresh
+    ((line == 0)) && buffer[1]="" && line=1 && refresh
+    cursor goto $LINES
+    printf "\e[32m%s\e[m" "--INSERT--"
+    cursor goto $((line-base + 1)) 6
+    cursor show
+    read -d $'\e' -rei "${buffer[line]}"
+    cursor hide
+    # support for multiline inserts
+    if [[ "$REPLY" == *""* ]]; then
+        # do some complicated shit
+        split "$REPLY" ""
+        buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
+        unset "buffer[0]"
+        i=0
+        while [ $i -lt ${#arr[@]} ]; do
+            buffer=([0]="" "${buffer[@]:1:line+i-1}" "${arr[$i]}" "${buffer[@]:line+i}")
+            unset "buffer[0]"
+            ((i++))
+        done
+    else
+        buffer[line]=$REPLY
+    fi
+    unsaved_changes=1
+}
+
+bim_prompt() {
+    bind 'set disable-completion off' 2>/dev/null
+    cursor show
+    read -rep ":" choice
+    bind 'set disable-completion on' 2>/dev/null
+
+    if [ "${choice::1}" = "!" ]; then
+        eval "${choice##!}"
+        read -N1 -r -p "press any key to continue"
+    #elif [ "${choice::3}" = "r !" ]; then
+    else
+        eval "$choice"
+    fi
+    cursor hide
+}
+
+quit() {
+    if [ "$unsaved_changes" = 0 ]; then
+        exit 0
+    else
+        message="unsaved changes. force quit with \":qq\""
+    fi
+}
+
+# functions that are really just aliases
+# and shortcuts for the command line
+
+w() {
+    bim_write "$@"
+}
+
+q() {
+    quit
+}
+
+qq() {
+    exit 0
+}
+
+wq() {
+    w "$@" && q
+}
+
+e() {
+    bim_read "$@"
+}
+
+
+keyboard_loop () {
+    startup
+    bim_read "$1" && message="welcome to bim ($message)"
+    refresh
+
+    while true; do
+        read -rsN1 key
+        message=""
+
+        # compute keys from rc or defaults
+        keybinds
+
+        # Refresh the UI
+        refresh
+    done
+    clear
+}
+
+usage () {
+cat <<EOF
+bim: bash vim
+
+usage: ${0##*/} [options] [file]
+
+options:
+    -h|--help: print this help message
+    -k|--keys: print a list of defaults
+
+if no file is given, default is bim.txt
+EOF
+}
+
+keys () {
+cat <<EOF
+### bim defaults ###
+
+# navigation
+j,k - move up or down
+J,K - page up and down
+
+# editing
+  i - edit line   (:bim_edit)
+  d - delete line (:bim_delete)
+  c - clear line  (:bim_clear)
+  y - yank line   (:bim_yank)
+  p - paste line  (:bim_paste)
+  n - create line below (:bim_blank)
+  N - create line above (:bim_backblank)
+  o - create line below and edit (:bim_insert)
+  O - create line above and edit (:bim_backinsert)
+
+# commands
+  : - open command line
+ :w [FILE] - write to current or given file
+ :q - quit
+:qq - force quit
+:wq - write and quit
+ :e [FILE] - open file
+ :! [COMMAND] - pause to view the output of a command
+
+note: you CAN run shell commands.
+just run them. no "!" required :)
+
+### scripting ###
+
+all inputs can also be typed as commands.
+this allows for scripting.
+run bim in the repository and type:
+:source ./example.bash
+and see what happens!
+EOF
+}
+
+main () {
+    case $1 in
+        -h|--help) trap : EXIT; usage;;
+        -k|--keys) trap : EXIT; keys;;
+        *) bimrc; keyboard_loop "$1";;
+    esac
+}
+
+main "$@"
