@@ -263,15 +263,17 @@ bim_prompt() {
     bind 'set disable-completion off' 2>/dev/null
     cursor show
     read -rep ":" choice
-    cursor hide
     bind 'set disable-completion on' 2>/dev/null
 
     if [ "${choice::1}" = "!" ]; then
         eval "${choice##!}"
-        read -N1 -r -p "press any key to continue"
+        cursor hide
+        printf "\e[31mpress any key to continue."
+        read -N1 -r
     #elif [ "${choice::3}" = "r !" ]; then
     else
         eval "$choice"
+        cursor hide
     fi
 }
 
