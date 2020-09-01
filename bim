@@ -19,7 +19,7 @@ bind 'set disable-completion on' 2>/dev/null
 
 line=0
 base=1
-file="bim.txt"
+# file="bim.txt"
 version="indev"
 message="welcome to bim"
 unsaved_changes=0
@@ -81,15 +81,14 @@ bimrc() {
 startup() {
     cursor hide
     cursor spos
-    cursor save
     cursor nowrap
 }
 
 cleanup() {
     cursor show
     cursor rpos
-    cursor load
-    exit
+    cursor goto $LINES 0
+    exit 0
 }
 
 cursor() {
@@ -141,7 +140,14 @@ bim_read() {
 }
 
 bim_write() {
-    [ "$1" ] && myfile="$1" || myfile="$file"
+    if [ "$1" ]; then
+        myfile="$1"
+    elif [ "$file" ]; then
+        myfile="$file"
+    else
+        message="no file to write."
+        return 1
+    fi
     : >"$myfile"
     for wline in "${buffer[@]}"; do echo "$wline" >> "$myfile"; done
     message="Wrote ${#buffer[@]} lines to '$myfile'"   
@@ -320,9 +326,10 @@ bim: bash vim
 usage: ${0##*/} [ options | file ]
 
 options:
-    -h|--help: print this help message
-    -k|--keys: print a list of defaults, and more info
-    -c|--rc: test for rc file
+    -h|--help:  print this help message
+    -k|--keys:  print a basic usage document
+    -d|--rcdoc: print rc info and general scripting info
+    -c|--rc:    test for rc file
 
 if no file is given, default is bim.txt
 EOF
@@ -366,6 +373,43 @@ this allows for scripting.
 run bim in the repository and type:
 :source example.bash
 and see what happens!
+for more information on extending bim, run "bim -d"
+EOF
+}
+
+rcdoc() {
+cat <<EOF
+this doc is printed when "-d" is passed or no rc is found.
+
+### BIMRC ###
+
+the rc is read from these locations in this order:
+\$BIMRC
+\$XDG_CONFIG_HOME/bim/bimrc
+\$HOME/.bimrc
+it is recommended to look at or even copy the example rc.
+it contains the default keybinds and some silly functions as examples.
+the rc file is simply a series of shell function definitions.
+these functions can be typed as commands or bound to keys.
+care should be taken to avoid naming conflicts.
+
+### KEYBINDS ###
+
+'keybinds()' is a special function that is integral to the main loop.
+if it is not defined in the rc, defaults will be used.
+
+# example
+keybinds() {
+    case "\${key}" in
+        a) my_firstfunction [args];;
+        b) my_otherfunction [args];;
+        c) my_thirdfunction [args];;
+    esac
+}
+
+### SCRIPTING ###
+
+
 EOF
 }
 
@@ -377,11 +421,12 @@ main () {
             trap : EXIT
             bimrc
             if [ "$message" = "welcome to bim" ]; then
-                echo "no rc found."
+                rcdoc
             else
-                echo "$message"
+                echo "testing: $message successfully."
             fi
             ;;
+        -d|--rcdoc) trap : EXIT; rcdoc;;
         *) bimrc; keyboard_loop "$1";;
     esac
 }
