@@ -2,7 +2,8 @@
 
 ### urgent
 
-# read commands
+# fix screen view
+# add 'z' to center view
 
 ### maybe?
 
@@ -167,8 +168,6 @@ bim_up() {
     [ "$1" ] && num="$1" || num=1
     for ((i=0;i<$num;i++)); do
         ((line > 1))    && ((line--))
-        ((line < base)) && ((base--))
-        ((base <= 0))   && base=1
     done
 }
 
@@ -176,7 +175,6 @@ bim_down() {
     [ "$1" ] && num="$1" || num=1
     for ((i=0;i<$num;i++)); do
         ((line < ${#buffer[@]})) && ((line++))
-        ((line > base+LINES-3))  && ((base++))
     done
 }
 
@@ -435,6 +433,13 @@ keyboard_loop () {
         for ((kbinc=0; kbinc < kbj; kbinc++)); do
             keybinds
         done
+
+        # universal scrolling system
+        if [ $base -gt $line ]; then
+            [ $base = 1 ] || base=$line
+        elif (( base+LINES-3 < line )); then
+            ((base=line-LINES+3))
+        fi
 
         # refresh the UI
         refresh
