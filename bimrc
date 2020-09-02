@@ -101,6 +101,10 @@ keybinds() {
         J) bim_down $((LINES - 4));;
 		  g) bim_bof;;
 		  G) bim_eof;;
+        t) cursor show
+           bim_goto "$(misc_prompt "goto: ")"
+           cursor hide
+           ;;
         
         # editing
         a) bim_edit;;

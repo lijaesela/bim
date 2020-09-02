@@ -57,6 +57,10 @@ bimrc() {
                 J) bim_down $((LINES - 4));;
                 g) bim_bof;;
                 G) bim_eof;;
+                t) cursor show
+                   bim_goto "$(misc_prompt "goto: ")"
+                   cursor hide
+                   ;;
                 
                 # editing
                 a) bim_edit;;
@@ -355,6 +359,11 @@ bim_eof() {
     line=${#buffer[@]}
 }
 
+bim_goto() {
+    [ "$1" ] || return 1
+    [ ${#buffer[@]} -ge $1 ] && line=$1
+}
+
 # functions that are really just aliases
 # and shortcuts for the command line
 
@@ -452,8 +461,13 @@ cat <<EOF
 ### bim defaults ###
 
 # navigation
-j,k - move up or down
-J,K - page up and down
+  j - move down  (:bim_down [LINES])
+  k - page up    (:bim_up [LINES])
+  J - page down
+  K - page up
+  g - first line (:bim_bof)
+  G - last line  (:bim_eof)
+  t - go to line (:bim_goto [LINE])
 
 # editing
   a - append to line  (:bim_edit)
@@ -462,8 +476,8 @@ J,K - page up and down
   c - clear line      (:bim_clear)
   y - yank line       (:bim_yank)
   p - paste line      (:bim_paste)
-  n - create line below (:bim_blank)
-  N - create line above (:bim_backblank)
+  n - create line below (:bim_blank [LINES])
+  N - create line above (:bim_backblank [LINES])
   o - create line below and edit (:bim_insert)
   O - create line above and edit (:bim_backinsert)
 
