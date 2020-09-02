@@ -124,11 +124,11 @@ keybinds() {
 		     cursor hide
 			  ;;
 		  w) cursor show
-			  bim_cfw $(misc_prompt "h: ")
+			  bim_cfw $(misc_prompt "change first word: ")
 		     cursor hide
 			  ;;
 		  W) cursor show
-			  bim_clw $(misc_prompt "h: ")
+			  bim_clw $(misc_prompt "change last word: ")
 		     cursor hide
 			  ;;
 		  r) bim_dfw;;

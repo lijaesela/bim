@@ -84,6 +84,7 @@ startup() {
     cursor hide
     cursor spos
     cursor nowrap
+    cursor block
 }
 
 cleanup() {
@@ -105,6 +106,8 @@ cursor() {
     goto) printf "\e[%s;%sf" "$2" "$3";;
     wrap) printf "\e[?7h";;
     nowrap) printf "\e[?7l";;
+    beam) printf "\e[5 q";;
+    block) printf "\e[1 q";;
     esac
     return 1
 }
@@ -114,13 +117,13 @@ refresh() {
     #printf "\e[36m %s (%s Lines) %s %sx%s %s \e[m\n" \
         #"$file" "${#buffer[@]}" "$version" "$LINES" "$COLUMNS" "$base"
     for ((i=base; i-base < LINES-2; i++)); do
-        ((i !=  line))        && printf "\e[93m"     || printf "\e[31m"
+        ((i !=  line))        && printf "\e[93m"     || printf "\e[31;1m"
         ((i > ${#buffer[@]})) && printf "   ~\e[m\n" || printf "%4s\e[m %s\n" "$i" "${buffer[i]}"
     done
     if [ "$message" ]; then
-        printf "\e[32m%s\e[m\n" "$message"
+        printf "\e[32;1m%s\e[m\n" "$message"
     else
-        printf "\e[36m%s (%s Lines) %s (%sx%s) %s \e[m\n" \
+        printf "\e[36;1m%s (%s Lines) %s (%sx%s) %s \e[m\n" \
             "$file" "${#buffer[@]}" "$version" "$LINES" "$COLUMNS" "$base"
     fi
 }
@@ -242,9 +245,11 @@ bim_edit() {
     printf "\e[32m%s\e[m" "--INSERT--"
     # do the actual thing
     cursor goto $((line-base + 1)) 6
+    cursor beam
     cursor show
     read -d $'\e' -rei "${buffer[line]}"
     cursor hide
+    cursor block
     # support for multiline inserts
     if [[ "$REPLY" == *""* ]]; then
         # do some complicated shit
@@ -275,9 +280,11 @@ bim_prepend() {
     # do the actual thing
     cursor goto $((line-base + 2)) 4
     printf "^~"
+    cursor beam
     cursor show
     read -re
     cursor hide
+    cursor block
     # write $REPLY + what was already there
     buffer[line]="${REPLY}${buffer[line]}"
     unsaved_changes=1
@@ -296,7 +303,7 @@ bim_prompt() {
         read -N1 -r
     #elif [ "${choice::3}" = "r !" ]; then
     else
-        eval "$choice"
+        eval "$choice" || message="command not found or failed."
         cursor hide
     fi
 }
