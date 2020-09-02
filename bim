@@ -3,7 +3,6 @@
 ### urgent
 
 # read commands
-# insert from beginning
 
 ### maybe?
 
@@ -66,10 +65,10 @@ bimrc() {
                 c) bim_clear;;
                 o) bim_insert;;
                 O) bim_backinsert;;
-                n) bim_blank;;
-                N) bim_backblank;;
+                n) bim_blank 1; bim_down 1;;
+                N) bim_backblank 1;;
                 y) bim_yank;;
-                p) bim_paste;;
+                p) bim_paste; bim_down 1;;
             
                 # misc
                 :) bim_prompt;;
@@ -201,17 +200,17 @@ bim_backinsert() {
 }
 
 bim_blank() {
-    buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
-    unset "buffer[0]"
-    ((line++))
-    ((line > base+LINES-3))  && ((base++))
+    for ((i=0;i<$1;i++)); do
+        buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
+        unset "buffer[0]"
+    done
 }
 
 bim_backblank() {
-    buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
-    unset "buffer[0]"
-    ((line++))
-    ((line > base+LINES-3))  && ((base++))
+    for ((i=0;i<$1;i++)); do
+        buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
+        unset "buffer[0]"
+    done
 }
 
 bim_yank() {
@@ -222,8 +221,6 @@ bim_yank() {
 bim_paste() {
     buffer=([0]="" "${buffer[@]:1:line}" "$lineyank" "${buffer[@]:line+1}")
     unset "buffer[0]"
-    ((line++))
-    ((line > base+LINES-3))  && ((base++))
 }
 
 bim_clear() {
@@ -299,7 +296,11 @@ bim_prompt() {
         cursor hide
         printf "\e[31mpress any key to continue."
         read -N1 -r
-    #elif [ "${choice::3}" = "r !" ]; then
+    elif [ "${choice::3}" = "r !" ]; then
+        eval "output=\"\$(${choice##r !})\""
+        split "$output" $'\n'
+        buffer[line]="${arr[0]}"
+        cursor hide
     else
         eval "$choice"
         succ=$?
@@ -308,6 +309,7 @@ bim_prompt() {
         fi
         cursor hide
     fi
+    # cursor must be hidden in each case.
 }
 
 misc_prompt() {
