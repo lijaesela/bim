@@ -159,7 +159,8 @@ bim_write() {
 }
 
 bim_up() {
-    for ((i=0;i<$1;i++)); do
+    [ "$1" ] && num="$1" || num=1
+    for ((i=0;i<$num;i++)); do
         ((line > 1))    && ((line--))
         ((line < base)) && ((base--))
         ((base <= 0))   && base=1
@@ -167,7 +168,8 @@ bim_up() {
 }
 
 bim_down() {
-    for ((i=0;i<$1;i++)); do
+    [ "$1" ] && num="$1" || num=1
+    for ((i=0;i<$num;i++)); do
         ((line < ${#buffer[@]})) && ((line++))
         ((line > base+LINES-3))  && ((base++))
     done
@@ -200,14 +202,16 @@ bim_backinsert() {
 }
 
 bim_blank() {
-    for ((i=0;i<$1;i++)); do
+    [ "$1" ] && num="$1" || num=1
+    for ((i=0;i<$num;i++)); do
         buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
         unset "buffer[0]"
     done
 }
 
 bim_backblank() {
-    for ((i=0;i<$1;i++)); do
+    [ "$1" ] && num="$1" || num=1
+    for ((i=0;i<$num;i++)); do
         buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
         unset "buffer[0]"
     done
@@ -299,8 +303,14 @@ bim_prompt() {
     elif [ "${choice::3}" = "r !" ]; then
         eval "output=\"\$(${choice##r !})\""
         split "$output" $'\n'
-        buffer[line]="${arr[0]}"
+        i=0
+        while [ $i -lt ${#arr[@]} ]; do
+            buffer=([0]="" "${buffer[@]:1:line+i-1}" "${arr[$i]}" "${buffer[@]:line+i}")
+            unset "buffer[0]"
+            ((i++))
+        done
         cursor hide
+        unsaved_changes=1
     else
         eval "$choice"
         succ=$?
