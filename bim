@@ -16,7 +16,6 @@ bind 'set disable-completion on' 2>/dev/null
 
 line=0
 base=1
-# file="bim.txt"
 version="indev"
 message="welcome to bim"
 unsaved_changes=0
@@ -34,17 +33,17 @@ split() {
 bimrc() {
     # check for rc in various locations
     if [ "$BIMRC" ]; then
-        source "$BIMRC"
-        message="rc loaded from \$BIMRC"
-    elif [ -f "$XDG_CONFIG_HOME/bim/bimrc" ]; then
-        source "$XDG_CONFIG_HOME/bim/bimrc"
-        message="rc loaded from \$XDG_CONFIG_HOME"
-    elif [ -f "$HOME/.bimrc" ]; then
-        source "$HOME/.bimrc"
-        message="rc loaded from \$HOME"
-    elif [ -f "./bimrc" ]; then
-        source "./bimrc"
-        message="rc loaded from current directory"
+        source "$BIMRC" &&
+            message="rc loaded from \$BIMRC"
+    elif [ -e "$XDG_CONFIG_HOME/bim/bimrc" ]; then
+        source "$XDG_CONFIG_HOME/bim/bimrc" &&
+            message="rc loaded from \$XDG_CONFIG_HOME"
+    elif [ -e "$HOME/.bimrc" ]; then
+        source "$HOME/.bimrc" &&
+            message="rc loaded from \$HOME"
+    elif [ -e "./bimrc" ]; then
+        source "./bimrc" &&
+            message="rc loaded from current directory"
     fi
 
     # check if a keymap is provided
@@ -272,7 +271,8 @@ bim_prepend() {
     cursor goto $LINES
     printf "\e[32m%s\e[m" "--PREPEND--"
     # do the actual thing
-    cursor goto $((line-base + 2)) 6
+    cursor goto $((line-base + 2)) 4
+    printf "^~"
     cursor show
     read -re
     cursor hide
