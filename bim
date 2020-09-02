@@ -61,7 +61,7 @@ bimrc() {
                 G) bim_eof;;
                 
                 # editing
-                i) bim_edit;;
+                a) bim_edit;;
                 I) bim_prepend;;
                 d) bim_delete;;
                 c) bim_clear;;
@@ -394,11 +394,12 @@ j,k - move up or down
 J,K - page up and down
 
 # editing
-  i - edit line   (:bim_edit)
-  d - delete line (:bim_delete)
-  c - clear line  (:bim_clear)
-  y - yank line   (:bim_yank)
-  p - paste line  (:bim_paste)
+  a - append to line  (:bim_edit)
+  I - prepend to line (:bim_prepend)
+  d - delete line     (:bim_delete)
+  c - clear line      (:bim_clear)
+  y - yank line       (:bim_yank)
+  p - paste line      (:bim_paste)
   n - create line below (:bim_blank)
   N - create line above (:bim_backblank)
   o - create line below and edit (:bim_insert)

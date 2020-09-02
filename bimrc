@@ -31,15 +31,29 @@ undent() {
 	done
 }
 
+# change the first (strong) word on a line
+bim_cfw() {
+	[ "$1" ] || return 1
+	[ ${#buffer[@]} = 0 ] && return 1
+	buffer[line]="${1}${buffer[line]##${buffer[line]%% *}}"
+}
+
 # change the last (strong) word on a line
-bim_cw() {
+bim_clw() {
 	[ "$1" ] || return 1
 	[ ${#buffer[@]} = 0 ] && return 1
 	buffer[line]="${buffer[line]%%${buffer[line]##* }}${1}"
 }
 
+# change the first (strong) word on a line
+bim_dfw() {
+	[ ${#buffer[@]} = 0 ] && return 1
+	buffer[line]="${buffer[line]##${buffer[line]%% *}}"
+	buffer[line]="${buffer[line]##?}"
+}
+
 # delete the last (strong) word on a line
-bim_dw() {
+bim_dlw() {
 	[ ${#buffer[@]} = 0 ] && return 1
 	buffer[line]="${buffer[line]%%${buffer[line]##* }}"
 	buffer[line]="${buffer[line]%%?}"
@@ -87,7 +101,7 @@ keybinds() {
 		  G) bim_eof;;
         
         # editing
-        i) bim_edit;;
+        a) bim_edit;;
         I) bim_prepend;;
         d) bim_delete;;
         c) bim_clear;;
@@ -102,18 +116,23 @@ keybinds() {
         :) bim_prompt;;
 
 		  ### rc functions ###
-		  P) indent 4;;
-		  U) undent 4;;
+		  i) indent 4;;
+		  u) undent 4;;
 		  S) bim_swap;;
 		  F) cursor show
 			  bim_shellfunc "$(misc_prompt "shell function: ")"
 		     cursor hide
 			  ;;
-		  W) cursor show
-			  bim_cw $(misc_prompt "h: ")
+		  w) cursor show
+			  bim_cfw $(misc_prompt "h: ")
 		     cursor hide
 			  ;;
-		  D) bim_dw;;
+		  W) cursor show
+			  bim_clw $(misc_prompt "h: ")
+		     cursor hide
+			  ;;
+		  r) bim_dfw;;
+		  R) bim_dlw;;
     
     esac
 }
