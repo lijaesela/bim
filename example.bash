@@ -2,5 +2,6 @@
 bim_blank
 bim_blank
 
-buffer[2]="the second line has this text now!!!!!!!"
-line=2
+buffer[line]="the second line from the cursor has this text now!!!!!!!"
+
+bim_up 2

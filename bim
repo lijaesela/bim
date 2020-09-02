@@ -301,7 +301,8 @@ bim_prompt() {
         read -N1 -r
     #elif [ "${choice::3}" = "r !" ]; then
     else
-        eval "$choice" || message="command not found or failed."
+        eval "$choice"
+        message="finished with exit code $?"
         cursor hide
     fi
 }
