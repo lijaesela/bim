@@ -88,6 +88,7 @@ keybinds() {
         
         # editing
         i) bim_edit;;
+        I) bim_prepend;;
         d) bim_delete;;
         c) bim_clear;;
         o) bim_insert;;
@@ -101,14 +102,14 @@ keybinds() {
         :) bim_prompt;;
 
 		  ### rc functions ###
-		  I) indent 4;;
+		  P) indent 4;;
 		  U) undent 4;;
 		  S) bim_swap;;
 		  F) cursor show
 			  bim_shellfunc "$(misc_prompt "shell function: ")"
 		     cursor hide
 			  ;;
-		  w) cursor show
+		  W) cursor show
 			  bim_cw $(misc_prompt "h: ")
 		     cursor hide
 			  ;;

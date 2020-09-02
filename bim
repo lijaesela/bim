@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
 
-# roadmap
-
 ### urgent
 
-# make screen pan if needed for ALL actions that move the cursor
-# automatically continue indentation
+# read commands
+# insert from beginning
 
 ### maybe?
 
 # truly iron out multiline inserts
-
-### pog
 
 declare -a buffer
 declare -i line base
@@ -67,6 +63,7 @@ bimrc() {
                 
                 # editing
                 i) bim_edit;;
+                I) bim_prepend;;
                 d) bim_delete;;
                 c) bim_clear;;
                 o) bim_insert;;
@@ -176,10 +173,12 @@ bim_down() {
 }
 
 bim_delete() {
+    lineyank="${buffer[line]}"
     buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
     unset "buffer[0]"
     ((line > ${#buffer[@]})) && ((line--))
-    unsaved_changes=1 #Set unsaved changes to 1
+    message="line cut."
+    unsaved_changes=1
 }
 
 bim_insert() {
@@ -233,10 +232,14 @@ bim_clear() {
 }
 
 bim_edit() {
+    # refresh, as 'read' will freeze drawing
     refresh
+    # make a line in an empty buffer
     ((line == 0)) && buffer[1]="" && line=1 && refresh
+    # print '--INSERT--' at the bottom
     cursor goto $LINES
     printf "\e[32m%s\e[m" "--INSERT--"
+    # do the actual thing
     cursor goto $((line-base + 1)) 6
     cursor show
     read -d $'\e' -rei "${buffer[line]}"
@@ -254,8 +257,27 @@ bim_edit() {
             ((i++))
         done
     else
-        buffer[line]=$REPLY
+        # just do a plain ol' write to the array if ENTER isn't hit
+        buffer[line]="$REPLY"
     fi
+    unsaved_changes=1
+}
+
+bim_prepend() {
+    # refresh, as 'read' will freeze drawing
+    refresh
+    # make a line in an empty buffer
+    ((line == 0)) && buffer[1]="" && line=1 && refresh
+    # print '--INSERT--' at the bottom
+    cursor goto $LINES
+    printf "\e[32m%s\e[m" "--PREPEND--"
+    # do the actual thing
+    cursor goto $((line-base + 2)) 6
+    cursor show
+    read -re
+    cursor hide
+    # write $REPLY + what was already there
+    buffer[line]="${REPLY}${buffer[line]}"
     unsaved_changes=1
 }
 
