@@ -302,7 +302,10 @@ bim_prompt() {
     #elif [ "${choice::3}" = "r !" ]; then
     else
         eval "$choice"
-        message="finished with exit code $?"
+        succ=$?
+        if [ ! "$(type -t ${choice%% *})" = "function" ]; then
+            message="finished with exit code $succ"
+        fi
         cursor hide
     fi
 }
