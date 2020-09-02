@@ -90,6 +90,7 @@ cleanup() {
     cursor rpos
     cursor goto $LINES 0
     cursor wrap
+    cursor block
     exit 0
 }
 
@@ -386,7 +387,7 @@ keyboard_loop () {
         # compute keys from rc or defaults
         keybinds
 
-        # Refresh the UI
+        # refresh the UI
         refresh
     done
     clear
@@ -399,12 +400,10 @@ bim: bash vim
 usage: ${0##*/} [ options | file ]
 
 options:
-    -h|--help:  print this help message
-    -k|--keys:  print a basic usage document
+    -h|--help : print this help message
+    -k|--keys : print a basic usage document
     -d|--rcdoc: print rc info and general scripting info
-    -c|--rc:    test for rc file
-
-if no file is given, default is bim.txt
+    -c|--rc   : test for rc file
 EOF
 }
 
@@ -429,16 +428,15 @@ J,K - page up and down
   O - create line above and edit (:bim_backinsert)
 
 # commands
-  : - open command line
- :w [FILE] - write to current or given file
- :q - quit
-:qq - force quit
-:wq - write and quit
- :e [FILE] - open file
- :! [COMMAND] - pause to view the output of a command
-
-note: you CAN run shell commands.
-just run them. no "!" required :)
+# NOTE: the command line is for both editor and shell commands.
+   : - open command line
+  :w [FILE] - write to current or given file
+  :q - quit
+ :qq - force quit
+ :wq - write and quit
+  :e [FILE] - open file
+  :![COMMAND] - pause to view the output of a command
+:r ![COMMAND] - read output of a command
 
 ### scripting ###
 
@@ -461,6 +459,7 @@ the rc is read from these locations in this order:
 \$BIMRC
 \$XDG_CONFIG_HOME/bim/bimrc
 \$HOME/.bimrc
+./bimrc
 it is recommended to look at or even copy the example rc.
 it contains the default keybinds and some silly functions as examples.
 the rc file is simply a series of shell function definitions.
@@ -500,15 +499,16 @@ here are some variables you must be aware of.
 \${buffer[@]} # the array that stores the buffer
 \$base        # the first line visible in the window
 \$file        # file that 'bim_write' writes to if not given an argument
+\$unsaved_changes    # whether unsaved changes are present
 
 # silly, basic examples
 # for some real, useful functions, see the example bimrc.
 goto_seven() {
-    # set active line to 7
-    line=7
+    # set active line to 7 if it exists
+    [ ${#buffer[@]} -ge 7 ] && line=7
 }
 set_poggers() {
-    # exit if line is 0 (no line)
+    # exit if line is 0 (no lines in buffer)
     [ \$line = 0 ] && return 1
     # set the current line's contents
     buffer[line]="poggers!"
