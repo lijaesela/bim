@@ -296,22 +296,26 @@ bim_prompt() {
     read -rep ":" choice
     bind 'set disable-completion on' 2>/dev/null
 
+    # run command and wait
     if [ "${choice::1}" = "!" ]; then
         eval "${choice##!}"
         cursor hide
         printf "\e[31mpress any key to continue."
         read -N1 -r
+    # read command output
     elif [ "${choice::3}" = "r !" ]; then
         eval "output=\"\$(${choice##r !})\""
         split "$output" $'\n'
+        bim_blank ${#arr[@]}
         i=0
         while [ $i -lt ${#arr[@]} ]; do
-            buffer=([0]="" "${buffer[@]:1:line+i-1}" "${arr[$i]}" "${buffer[@]:line+i}")
+            buffer[line+i+1]="${arr[i]}"
             unset "buffer[0]"
             ((i++))
         done
         cursor hide
         unsaved_changes=1
+    # simply run command
     else
         eval "$choice"
         succ=$?
@@ -320,7 +324,7 @@ bim_prompt() {
         fi
         cursor hide
     fi
-    # cursor must be hidden in each case.
+    # cursor must be hidden in each case individually.
 }
 
 misc_prompt() {
@@ -384,8 +388,44 @@ keyboard_loop () {
         read -rsN1 key
         message=""
 
+        # iteration (only 2 digit numbers)
+        # cancel with ESC
+        case $key in
+            1|2|3|4|5|6|7|8|9)
+                digit1="$key"
+                printf '%d' "$key"
+                read -rsN1 key
+                case $key in
+                    1|2|3|4|5|6|7|8|9|0)
+                        digit2="$key"
+                        printf '%d' "$key"
+                        read -rsN1 key
+                        ;;
+                    "")
+                        digit1="1"
+                        digit2=""
+                        ;;
+                    *)
+                        digit2=""
+                        ;;
+                esac
+                ;;
+            "")
+                digit1="1"
+                digit2=""
+                ;;
+            *)
+                digit1="1"
+                digit2=""
+                ;;
+        esac
+
         # compute keys from rc or defaults
-        keybinds
+        # reiterate if applicable
+        kbj="${digit1}${digit2}"
+        for ((kbinc=0; kbinc < kbj; kbinc++)); do
+            keybinds
+        done
 
         # refresh the UI
         refresh
