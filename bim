@@ -90,6 +90,7 @@ cleanup() {
     cursor show
     cursor rpos
     cursor goto $LINES 0
+    cursor wrap
     exit 0
 }
 
@@ -102,6 +103,7 @@ cursor() {
     hide) printf "\e[?25l";;
     show) printf "\e[?25h";;
     goto) printf "\e[%s;%sf" "$2" "$3";;
+    wrap) printf "\e[?7h";;
     nowrap) printf "\e[?7l";;
     esac
     return 1
