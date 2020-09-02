@@ -2,7 +2,6 @@
 
 ### urgent
 
-# fix screen view
 # add 'z' to center view
 
 ### maybe?
@@ -77,6 +76,7 @@ bimrc() {
             
                 # misc
                 :) bim_prompt;;
+                z) bim_center;;
             
             esac
         }
@@ -360,6 +360,11 @@ bim_eof() {
 bim_goto() {
     [ "$1" ] || return 1
     [ ${#buffer[@]} -ge $1 ] && line=$1
+}
+
+bim_center() {
+    (( base=line-((LINES-3)/2) ))
+    [ $base -lt 1 ] && base=1
 }
 
 # functions that are really just aliases

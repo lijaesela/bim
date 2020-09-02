@@ -120,6 +120,7 @@ keybinds() {
     
         # misc
         :) bim_prompt;;
+		  z) bim_center;;
 
 		  ### rc functions ###
 		  i) indent $tabstop;;
