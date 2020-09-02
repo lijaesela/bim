@@ -9,17 +9,16 @@
 
 # truly iron out multiline inserts
 
+line=0
+base=1
+version="alpha"
+message="welcome to bim"
+unsaved_changes=0
+
 declare -a buffer
 declare -i line base
 declare file version message
 bind 'set disable-completion on' 2>/dev/null
-
-line=0
-base=1
-version="indev"
-message="welcome to bim"
-unsaved_changes=0
-
 shopt -s checkwinsize; (:)
 trap refresh WINCH ALRM
 trap cleanup EXIT INT HUP USR1
@@ -48,7 +47,7 @@ bimrc() {
 
     # check if a keymap is provided
     # if not, set defaults
-    if [ ! "`type -t keybinds`" = "function" ]; then
+    if [ ! "$(type -t keybinds)" = "function" ]; then
         keybinds() {
             case "${key}" in
             
@@ -109,7 +108,6 @@ cursor() {
     beam) printf "\e[5 q";;
     block) printf "\e[1 q";;
     esac
-    return 1
 }
 
 refresh() {

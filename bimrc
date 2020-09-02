@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+tabstop=4
+
 # indent by a number of spaces, 4 by default
 indent() {
 	# exit with an empty buffer
@@ -116,11 +118,11 @@ keybinds() {
         :) bim_prompt;;
 
 		  ### rc functions ###
-		  i) indent 4;;
-		  u) undent 4;;
+		  i) indent $tabstop;;
+		  u) undent $tabstop;;
 		  S) bim_swap;;
 		  F) cursor show
-			  bim_shellfunc "$(misc_prompt "shell function: ")"
+			  bim_shellfunc "$(misc_prompt "shell function: ")" $tabstop
 		     cursor hide
 			  ;;
 		  w) cursor show
