@@ -1,7 +1,3 @@
 #!/usr/bin/env bash
-bim_blank
-bim_blank
-
-buffer[line]="the second line from the cursor has this text now!!!!!!!"
-
-bim_up 2
+bim_blank 2
+buffer[line+2]="the second line from the cursor has this text now!!!!!!!"
