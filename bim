@@ -112,6 +112,7 @@ cursor() {
     nowrap) printf "\e[?7l";;
     beam) printf "\e[5 q";;
     block) printf "\e[1 q";;
+    underline) printf "\e[3 q";;
     esac
 }
 
@@ -282,7 +283,7 @@ bim_prepend() {
     # do the actual thing
     cursor goto $((line-base + 2)) 4
     printf "^~"
-    cursor beam
+    cursor underline
     cursor show
     read -re
     cursor hide
