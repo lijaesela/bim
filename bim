@@ -2,11 +2,12 @@
 
 ### urgent
 
-# add 'z' to center view
+### small
 
-### maybe?
+### ambitious
 
-# truly iron out multiline inserts
+# add visual mode of some kind
+# add cursor position along x axis (maybe make another git branch for this one, required major overhaul)
 
 line=0
 base=1
@@ -194,14 +195,12 @@ bim_insert() {
     ((line++))
     # I have no clue why this has to be "-4" here
     ((line > base+LINES-4))  && ((base++))
-    refresh
     bim_edit
 }
 
 bim_backinsert() {
     buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
     unset "buffer[0]"
-    refresh
     bim_edit
 }
 
@@ -238,6 +237,52 @@ bim_clear() {
     unsaved_changes=1
 }
 
+# insert mode
+# my new robust replacement for 'read' that goes character by character
+bimput() { # <var> [starting string]
+    # starting text of line
+    local buf="$2"
+    local ch=""
+    cursor beam
+    cursor show
+    while true; do
+        IFS='' read -s -n1 ch
+        case "$ch" in
+            "")
+                bimputstatus="esc"
+                break
+                ;;
+            # read -n1 seems to interpret ENTER as nothing
+            "")
+                bimputstatus="enter"
+                break
+                ;;
+            # vscode is unable do display a backspace
+            # but there is one between these quotes
+            "")
+                if [ "$buf" ]; then
+                    buf="${buf%?}"
+                    printf "\b \b"
+                else
+                    bimputstatus="backline"
+                    break
+                fi
+                ;;
+            "	")
+                buf="${buf}${shiftwidth:="  "}"
+                echo -n "${shiftwidth}"
+                ;;
+            *)
+                buf="${buf}${ch}"
+                printf "$ch"
+                ;;
+        esac
+    done
+    eval "${1}=\${buf}"
+    cursor hide
+    cursor block
+}
+
 bim_edit() {
     # refresh, as 'read' will freeze drawing
     refresh
@@ -247,28 +292,22 @@ bim_edit() {
     cursor goto $LINES
     printf "\e[32m%s\e[m" "--INSERT--"
     # do the actual thing
-    cursor goto $((line-base + 1)) 6
-    cursor beam
-    cursor show
-    read -d $'\e' -rei "${buffer[line]}"
-    cursor hide
-    cursor block
-    # support for multiline inserts
-    if [[ "$REPLY" == *""* ]]; then
-        # do some complicated shit
-        split "$REPLY" ""
-        buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
-        unset "buffer[0]"
-        i=0
-        while [ $i -lt ${#arr[@]} ]; do
-            buffer=([0]="" "${buffer[@]:1:line+i-1}" "${arr[$i]}" "${buffer[@]:line+i}")
+    cursor goto $((line-base + 1)) $((6 + ${#buffer[line]}))
+    bimput "buffer[line]" "${buffer[line]}"
+    case "$bimputstatus" in
+        "enter")
+            # nice and simple
+            bim_insert
+            ;;
+        "backline")
+            # delete line
+            buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
             unset "buffer[0]"
-            ((i++))
-        done
-    else
-        # just do a plain ol' write to the array if ENTER isn't hit
-        buffer[line]="$REPLY"
-    fi
+            # go back a line and edit
+            ((line--))
+            bim_edit
+            ;;
+    esac
     unsaved_changes=1
 }
 

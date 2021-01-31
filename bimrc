@@ -1,96 +1,27 @@
 #!/usr/bin/env bash
 
-tabstop=4
+# this is what TAB will insert.
+# default value is "  "
+tabchar="  "
 
-# indent by a number of spaces, 4 by default
-indent() {
-	# exit with an empty buffer
-	[ ${#buffer[@]} = 0 ] && return 1
-	# take arg if given, default to 4
-	[ "$1" ] && spaces="$1" || spaces=4
-	# loop to prepend spaces to line
-	i=0
-	while [ $i -ne "$spaces" ]; do
-		buffer[line]=" ${buffer[line]}"
-		((i++))
-	done
-}
-
-# unindent up to the first non-space character or a number of times
-undent() {
-	# exit with an empty buffer
-	[ ${#buffer[@]} = 0 ] && return 1
-	# take arg if given, default to 4
-	[ "$1" ] && spaces="$1" || spaces=4
-	# loop
-	i=0
-	while [ $i -ne "$spaces" ]; do
-		# break if the character about to be removed isn't a space
-		[ "${buffer[line]::1}" = " " ] || break
-		# remove the first character of the string
-		buffer[line]="${buffer[line]##?}"
-		((i++))
-	done
-}
-
-# change the first (strong) word on a line
-bim_cfw() {
-	[ "$1" ] || return 1
-	[ ${#buffer[@]} = 0 ] && return 1
-	buffer[line]="${1}${buffer[line]##${buffer[line]%% *}}"
-}
-
-# change the last (strong) word on a line
-bim_clw() {
-	[ "$1" ] || return 1
-	[ ${#buffer[@]} = 0 ] && return 1
-	buffer[line]="${buffer[line]%%${buffer[line]##* }}${1}"
-}
-
-# change the first (strong) word on a line
-bim_dfw() {
-	[ ${#buffer[@]} = 0 ] && return 1
-	buffer[line]="${buffer[line]##${buffer[line]%% *}}"
-	buffer[line]="${buffer[line]##?}"
-}
-
-# delete the last (strong) word on a line
-bim_dlw() {
-	[ ${#buffer[@]} = 0 ] && return 1
-	buffer[line]="${buffer[line]%%${buffer[line]##* }}"
-	buffer[line]="${buffer[line]%%?}"
-}
-
-# create a shell function with a name
-# optionally, a number of indent spaces can be given
+# create a shell function with a name and edit contents.
+# not horribly useful, but a good showcase of bim's extensibility.
 bim_shellfunc() {
 	# name defaults to func if not given
 	[ "$1" ] && name="$1" || name="func"
-	[ "$2" ] && indent="$2" || indent="4"
 	# create 3 lines
 	bim_blank 3
 	# create function skeleton
-	buffer[line+1]="${name} () {"
-	i=0
-	while [ $i -ne "$indent" ]; do
-		buffer[line+2]="${buffer[line+2]} "
-		((i++))
-	done
+	buffer[line+1]="${name}() {"
+	buffer[line+2]="${tabchar}"
 	buffer[line+3]="}"
 	# edit contents
 	bim_down 2; bim_edit
 }
 
-# swap the current line with the next
-# or with another relative position if given
-bim_swap() {
-	[ "$1" ] && swappos="$1" || swappos=1
-	swapbuf="${buffer[line+swappos]}"
-	buffer[line+swappos]="${buffer[line]}"
-	buffer[line]="$swapbuf"
-}
-
-# these keybinds are defaults + functions in this file.
+# 'keybinds' is a special function that is called every time a key is pressed.
+# on start, bim checks to see if it is defined.
+# these keybinds are defaults, with the addition of F for 'bim_shellfunc'
 keybinds() {
     case "${key}" in
     
@@ -99,13 +30,13 @@ keybinds() {
         j) bim_down 1;;
         K) bim_up $((LINES - 4));;
         J) bim_down $((LINES - 4));;
-		  g) bim_bof;;
-		  G) bim_eof;;
+		g) bim_bof;;
+		G) bim_eof;;
         t) cursor show
            bim_goto "$(misc_prompt "goto: ")"
            cursor hide
            ;;
-        
+
         # editing
         a) bim_edit;;
         I) bim_prepend;;
@@ -120,26 +51,12 @@ keybinds() {
     
         # misc
         :) bim_prompt;;
-		  z) bim_center;;
+		z) bim_center;;
 
-		  ### rc functions ###
-		  i) indent $tabstop;;
-		  u) undent $tabstop;;
-		  S) bim_swap;;
-		  F) cursor show
-			  bim_shellfunc "$(misc_prompt "shell function: ")" $tabstop
-		     cursor hide
-			  ;;
-		  w) cursor show
-			  bim_cfw $(misc_prompt "change first word: ")
-		     cursor hide
-			  ;;
-		  W) cursor show
-			  bim_clw $(misc_prompt "change last word: ")
-		     cursor hide
-			  ;;
-		  r) bim_dfw;;
-		  R) bim_dlw;;
-    
+		# shell function example
+		F) cursor show
+		   bim_shellfunc "$(misc_prompt "shell function: ")" $tabstop
+		   cursor hide
+		   ;;
     esac
 }
