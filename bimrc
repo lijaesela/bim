@@ -1,27 +1,44 @@
 #!/usr/bin/env bash
 
+### SETTINGS ###
+
 # this is what TAB will insert.
-# default value is "  "
+# default value is "  ". possible values are any string.
 tabchar="  "
+
+# auto tab with bim_insert, bim_backinsert, or when ENTER is pressed in insert mode.
+# default value is "0". possible values are 0 or 1.
+autotab="0"
+
+### MACROS ###
 
 # create a shell function with a name and edit contents.
 # not horribly useful, but a good showcase of bim's extensibility.
-bim_shellfunc() {
+mc_shellfunc() {
 	# name defaults to func if not given
 	[ "$1" ] && name="$1" || name="func"
 	# create 3 lines
 	bim_blank 3
 	# create function skeleton
 	buffer[line+1]="${name}() {"
-	buffer[line+2]="${tabchar}"
+	buffer[line+2]="${tabchar:="  "}"
 	buffer[line+3]="}"
 	# edit contents
 	bim_down 2; bim_edit
 }
 
+# draws a smile :)
+mc_smile() {
+    bim_blank 4
+	buffer[line+1]="  #  #  "
+	buffer[line+2]="        "
+	buffer[line+3]="#      #"
+	buffer[line+4]=" ###### "
+}
+
 # 'keybinds' is a special function that is called every time a key is pressed.
 # on start, bim checks to see if it is defined.
-# these keybinds are defaults, with the addition of F for 'bim_shellfunc'
+# these keybinds are defaults, with additional bindings for macros in this RC file.
 keybinds() {
     case "${key}" in
     
@@ -53,10 +70,11 @@ keybinds() {
         :) bim_prompt;;
 		z) bim_center;;
 
-		# shell function example
+		# rc macros
 		F) cursor show
-		   bim_shellfunc "$(misc_prompt "shell function: ")" $tabstop
+		   mc_shellfunc "$(misc_prompt "function name: ")"
 		   cursor hide
 		   ;;
+        S) mc_smile;;
     esac
 }

@@ -4,6 +4,8 @@
 
 ### small
 
+# make curly brackets special with autotab
+
 ### ambitious
 
 # add visual mode of some kind
@@ -193,6 +195,11 @@ bim_insert() {
     buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
     unset "buffer[0]"
     ((line++))
+    if [ $autotab = 1 ]; then
+        # wacky code to get the tab size of the last line
+        local lasttab="${buffer[line-1]%${buffer[line-1]##* }}"
+        buffer[line]="$lasttab"
+    fi
     # I have no clue why this has to be "-4" here
     ((line > base+LINES-4))  && ((base++))
     bim_edit
