@@ -2,14 +2,16 @@
 
 ### urgent
 
-### small
+# fix or remove prepending
+
+### small/maybe
 
 # make curly brackets special with autotab
 
 ### ambitious
 
 # add visual mode of some kind
-# add cursor position along x axis (maybe make another git branch for this one, required major overhaul)
+# add cursor position along x axis (maybe make another git branch for this one, requires major overhaul)
 
 line=0
 base=1
