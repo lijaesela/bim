@@ -55,7 +55,7 @@ keybinds() {
            ;;
 
         # editing
-        a) bim_edit;;
+        a|i) bim_edit;;
         I) bim_prepend;;
         d) bim_delete;;
         c) bim_clear;;

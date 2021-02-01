@@ -13,7 +13,7 @@
 
 line=0
 base=1
-version="alpha"
+version="bim-indev"
 message="welcome to bim"
 unsaved_changes=0
 
@@ -66,7 +66,7 @@ bimrc() {
                    ;;
                 
                 # editing
-                a) bim_edit;;
+                a|i) bim_edit;;
                 I) bim_prepend;;
                 d) bim_delete;;
                 c) bim_clear;;
@@ -130,8 +130,8 @@ refresh() {
     if [ "$message" ]; then
         printf "\e[32;1m%s\e[m\n" "$message"
     else
-        printf "\e[36;1m%s (%s Lines) %s (%sx%s) %s \e[m\n" \
-            "$file" "${#buffer[@]}" "$version" "$LINES" "$COLUMNS" "$base"
+        printf "\e[36;1m%s [%s] %s/%s {%sx%s}\e[m\n" \
+            "$version" "${file}" "$line" "${#buffer[@]}" "$LINES" "$COLUMNS"
     fi
 }
 
@@ -195,9 +195,11 @@ bim_insert() {
     buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
     unset "buffer[0]"
     ((line++))
-    if [ $autotab = 1 ]; then
+    # check if autotab is on and if the tab block we're extending starts with spaces
+    if [ $autotab = 1 ] && [ "${buffer[line-1]::1}" = " " ]; then
         # wacky code to get the tab size of the last line
         local lasttab="${buffer[line-1]%${buffer[line-1]##* }}"
+        # put in that same tab length to what we're going to edit
         buffer[line]="$lasttab"
     fi
     # I have no clue why this has to be "-4" here
@@ -208,6 +210,11 @@ bim_insert() {
 bim_backinsert() {
     buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
     unset "buffer[0]"
+    # same code as 'bim_insert'
+    if [ $autotab = 1 ] && [ "${buffer[line+1]::1}" = " " ]; then
+        local lasttab="${buffer[line+1]%${buffer[line+1]##* }}"
+        buffer[line]="$lasttab"
+    fi
     bim_edit
 }
 
@@ -616,7 +623,7 @@ here are some variables you must be aware of.
 # for some real, useful functions, see the example bimrc.
 goto_seven() {
     # set active line to 7 if it exists
-    [ ${#buffer[@]} -ge 7 ] && line=7
+    [ \${#buffer[@]} -ge 7 ] && line=7
 }
 set_poggers() {
     # exit if line is 0 (no lines in buffer)
