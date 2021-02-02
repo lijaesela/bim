@@ -1,27 +1,20 @@
 #!/usr/bin/env bash
 
-### urgent
+# WOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+# VIM TIME
 
-# fix or remove prepending
-
-### small/maybe
-
-# make curly brackets special with autotab
-
-### ambitious
-
-# add visual mode of some kind
-# add cursor position along x axis (maybe make another git branch for this one, requires major overhaul)
-
-line=0
-base=1
 version="bim-indev"
 message="welcome to bim"
-unsaved_changes=0
 
 declare -a buffer
-declare -i line base
+declare -i line col base pad
 declare file version message
+line=1
+col=0
+base=1
+# adjustable padding. will require additional tweaks to drawing to work properly.
+pad=6
+unsaved_changes=0
 bind 'set disable-completion on' 2>/dev/null
 shopt -s checkwinsize; (:)
 trap refresh WINCH ALRM
@@ -56,8 +49,10 @@ bimrc() {
             case "${key}" in
             
                 # motions
+                h) bim_left 1;;
                 k) bim_up 1;;
                 j) bim_down 1;;
+                l) bim_right 1;;
                 K) bim_up $((LINES - 4));;
                 J) bim_down $((LINES - 4));;
                 g) bim_bof;;
@@ -110,7 +105,9 @@ cursor() {
     load) printf "\e[?47l";;
     spos) printf "\e7";;
     rpos) printf "\e8\e[B";;
-    hide) printf "\e[?25l";;
+    # hide) printf "\e[?25l";;
+    # TEMPORARY, I should go in and remove all cursor hides for this branch.
+    hide) true;;
     show) printf "\e[?25h";;
     goto) printf "\e[%s;%sf" "$2" "$3";;
     wrap) printf "\e[?7h";;
@@ -123,18 +120,22 @@ cursor() {
 
 refresh() {
     clear
-    #printf "\e[36m %s (%s Lines) %s %sx%s %s \e[m\n" \
-        #"$file" "${#buffer[@]}" "$version" "$LINES" "$COLUMNS" "$base"
+    # draw the buffer
     for ((i=base; i-base < LINES-2; i++)); do
         ((i !=  line))        && printf "\e[93m"     || printf "\e[31;1m"
         ((i > ${#buffer[@]})) && printf "   ~\e[m\n" || printf "%4s\e[m %s\n" "$i" "${buffer[i]}"
     done
+    # draw message or status bar if no message
     if [ "$message" ]; then
         printf "\e[32;1m%s\e[m\n" "$message"
     else
         printf "\e[36;1m%s [%s] %s/%s {%sx%s}\e[m\n" \
             "$version" "${file}" "$line" "${#buffer[@]}" "$LINES" "$COLUMNS"
     fi
+    # temporary queue for debugging x axis
+    # breaks the cmd line but fuck you
+    # printf "\e[%s;%sf%s" "$line" "$((col+pad))" "#"
+    cursor goto "$line" "$((col+pad))"
 }
 
 bim_read() {
@@ -182,6 +183,24 @@ bim_down() {
     for ((i=0;i<$num;i++)); do
         ((line < ${#buffer[@]})) && ((line++))
     done
+}
+
+bim_left() {
+    ((col > 0)) && ((col--))
+}
+
+bim_right() {
+    ((col++))
+}
+
+bim_fstrong() {
+    # find next char after space
+    true
+}
+
+bim_bstrong() {
+    # find prev char after space
+    true
 }
 
 bim_delete() {
@@ -248,7 +267,7 @@ bim_paste() {
 
 bim_clear() {
     ((line == 0)) && return
-    cursor goto $((line-base + 2)) 6
+    cursor goto $((line-base + 2)) $pad
     buffer[line]=""
     unsaved_changes=1
 }
@@ -308,7 +327,7 @@ bim_edit() {
     cursor goto $LINES
     printf "\e[32m%s\e[m" "--INSERT--"
     # do the actual thing
-    cursor goto $((line-base + 1)) $((6 + ${#buffer[line]}))
+    cursor goto $((line-base + 1)) $((pad + ${#buffer[line]}))
     bimput "buffer[line]" "${buffer[line]}"
     case "$bimputstatus" in
         "enter")
@@ -350,7 +369,7 @@ bim_prepend() {
 
 bim_prompt() {
     bind 'set disable-completion off' 2>/dev/null
-    cursor show
+    cursor goto "$LINES" "0"
     read -rep ":" choice
     bind 'set disable-completion on' 2>/dev/null
 
@@ -386,7 +405,7 @@ bim_prompt() {
 }
 
 misc_prompt() {
-    # cursor must be shown externally
+    # cursor must be shown (and now placed, in the axis branch) externally
     # as to not pass escape sequences into functions
     [ "$1" ] || return 1
     bind 'set disable-completion off' 2>/dev/null
@@ -449,7 +468,11 @@ e() {
 
 keyboard_loop () {
     startup
-    [ "$1" ] && bim_read "$1"
+    if [ "$1" ]; then
+        bim_read "$1"
+    else
+        buffer[1]="sample text"
+    fi
     refresh
 
     while true; do
@@ -500,6 +523,11 @@ keyboard_loop () {
             [ $base = 1 ] || base=$line
         elif (( base+LINES-3 < line )); then
             ((base=line-LINES+3))
+        fi
+
+        # axis branch: universal bounding for x axis
+        if [ $col -ge ${#buffer[line]} ]; then
+            col=${#buffer[line]}
         fi
 
         # refresh the UI

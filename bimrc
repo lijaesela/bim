@@ -39,42 +39,43 @@ mc_smile() {
 # 'keybinds' is a special function that is called every time a key is pressed.
 # on start, bim checks to see if it is defined.
 # these keybinds are defaults, with additional bindings for macros in this RC file.
-keybinds() {
-    case "${key}" in
+# COMMENTED OUT FOR AXIS BRANCH
+# keybinds() {
+#     case "${key}" in
     
-        # motions
-        k) bim_up 1;;
-        j) bim_down 1;;
-        K) bim_up $((LINES - 4));;
-        J) bim_down $((LINES - 4));;
-		g) bim_bof;;
-		G) bim_eof;;
-        t) cursor show
-           bim_goto "$(misc_prompt "goto: ")"
-           cursor hide
-           ;;
+#         # motions
+#         k) bim_up 1;;
+#         j) bim_down 1;;
+#         K) bim_up $((LINES - 4));;
+#         J) bim_down $((LINES - 4));;
+# 		g) bim_bof;;
+# 		G) bim_eof;;
+#         t) cursor show
+#            bim_goto "$(misc_prompt "goto: ")"
+#            cursor hide
+#            ;;
 
-        # editing
-        a|i) bim_edit;;
-        I) bim_prepend;;
-        d) bim_delete;;
-        c) bim_clear;;
-        o) bim_insert;;
-        O) bim_backinsert;;
-        n) bim_blank 1; bim_down 1;;
-        N) bim_backblank 1;;
-        y) bim_yank;;
-        p) bim_paste; bim_down 1;;
+#         # editing
+#         a|i) bim_edit;;
+#         I) bim_prepend;;
+#         d) bim_delete;;
+#         c) bim_clear;;
+#         o) bim_insert;;
+#         O) bim_backinsert;;
+#         n) bim_blank 1; bim_down 1;;
+#         N) bim_backblank 1;;
+#         y) bim_yank;;
+#         p) bim_paste; bim_down 1;;
     
-        # misc
-        :) bim_prompt;;
-		z) bim_center;;
+#         # misc
+#         :) bim_prompt;;
+# 		z) bim_center;;
 
-		# rc macros
-		F) cursor show
-		   mc_shellfunc "$(misc_prompt "function name: ")"
-		   cursor hide
-		   ;;
-        S) mc_smile;;
-    esac
-}
+# 		# rc macros
+# 		F) cursor show
+# 		   mc_shellfunc "$(misc_prompt "function name: ")"
+# 		   cursor hide
+# 		   ;;
+#         S) mc_smile;;
+#     esac
+# }
